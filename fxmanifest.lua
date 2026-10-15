@@ -5,7 +5,7 @@ game 'rdr3'
 author 'RexShack'
 name 'rsg-beekeeper'
 description 'Beekeeper script for RSG Framework'
-version '3.0.0'
+version '3.0.1'
 
 shared_scripts {
     '@ox_lib/init.lua',

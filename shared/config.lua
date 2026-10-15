@@ -74,19 +74,17 @@ Config.BeeHiveProps = {
     { prop = 'bee_house_gk_6', item = 'beehive_gk_6', label = 'Bee House (Style 6)', price = 250 },
 }
 
--- Placement gizmo (same system as rsg-farming). Controls are fixed:
+-- Simple placement: the hive ghost sits on the ground in front of the player
+-- and follows them. Walk/turn to position it. Controls:
 -- [LMB] place, [Left / Right] rotate, [Up / Down] height, [RMB / Backspace] cancel.
 Config.Placement = {
-    maxDistance    = 6.0,   -- how far from the player the gizmo can place
+    placeDistance  = 1.5,   -- metres in front of the player the hive is placed
+    maxDistance    = 6.0,   -- server-side sanity check on placement distance
     minHiveSpacing = 2.0,   -- min distance between two hives
-    heightMax      = 0.5,   -- max height offset up/down from the aimed ground point
+    heightMax      = 0.5,   -- max height offset up/down from the ground
     heightSpeed    = 0.3,   -- metres per second while holding Up/Down
     rotateSpeed    = 90.0,  -- degrees per second while holding Left/Right
     ringRadius     = 0.6,   -- radius of the valid/invalid ring drawn under the ghost
-    requireClearSpace = true, -- block placement where props, buildings, trees, peds or vehicles are in the way
-    clearancePadding  = 0.1,  -- extra metres of free space required around the hive's footprint
-    clearanceStartHeight = 0.4,         -- metres above the ground the clear-space check starts (raise if slopes get blocked)
-    clearanceIncludeVegetation = false, -- true = grass, bushes and other vegetation also block placement
 }
 
 Config.Beehive = {

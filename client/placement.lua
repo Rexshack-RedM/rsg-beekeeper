@@ -1,6 +1,6 @@
--- Gizmo-style placement (same system as rsg-farming): the ghost prop follows
--- where you aim, with drawn X/Y/Z axis handles, a valid/invalid ring,
--- rotation and height adjustment.
+-- Simple placement: the ghost hive sits on the ground a short distance in
+-- front of the player and follows them as they walk. Turn/walk to position it,
+-- use the arrow keys to rotate / fine-tune height, LMB to place.
 Placement = {}
 
 local CONTROLS = {
@@ -13,81 +13,25 @@ local CONTROLS = {
     down    = 0x05CA7C52, -- Arrow Down
 }
 
-local function rotToDir(rot)
-    local z, x = math.rad(rot.z), math.rad(rot.x)
-    local n = math.abs(math.cos(x))
-    return vector3(-math.sin(z) * n, math.cos(z) * n, math.sin(x))
-end
-
-local function camRaycast(dist, ignore)
-    local camPos = GetGameplayCamCoord()
-    local dest = camPos + rotToDir(GetGameplayCamRot(2)) * dist
-    local handle = StartShapeTestRay(camPos.x, camPos.y, camPos.z, dest.x, dest.y, dest.z, 1, ignore, 0)
-    local status, hit, endCoords = 1, false, vector3(0, 0, 0)
-    repeat
-        status, hit, endCoords = GetShapeTestResult(handle)
-        if status == 1 then Wait(0) end
-    until status ~= 1
-    return hit == 1 or hit == true, endCoords
-end
-
-local function drawAxis(origin, heading)
-    local r = math.rad(heading)
-    local fwd   = vector3(-math.sin(r), math.cos(r), 0.0)
-    local right = vector3(math.cos(r), math.sin(r), 0.0)
-    local len = 0.8
-    local o = origin + vector3(0, 0, 0.05)
-    DrawLine(o.x, o.y, o.z, o.x + right.x * len, o.y + right.y * len, o.z, 230, 70, 70, 255)   -- X
-    DrawLine(o.x, o.y, o.z, o.x + fwd.x * len,   o.y + fwd.y * len,   o.z, 90, 210, 90, 255)   -- Y
-    DrawLine(o.x, o.y, o.z, o.x, o.y, o.z + len, 80, 140, 240, 255)                            -- Z
-end
-
 local function drawRing(origin, radius, valid)
     local cr, cg, cb = 111, 191, 115
     if not valid then cr, cg, cb = 224, 85, 79 end
     local seg = 24
     for i = 0, seg - 1 do
         local a1, a2 = (i / seg) * math.pi * 2, ((i + 1) / seg) * math.pi * 2
-        DrawLine(origin.x + math.cos(a1) * radius, origin.y + math.sin(a1) * radius, origin.z + 0.03,
-                 origin.x + math.cos(a2) * radius, origin.y + math.sin(a2) * radius, origin.z + 0.03, cr, cg, cb, 220)
+        DrawLine(origin.x + math.cos(a1) * radius, origin.y + math.sin(a1) * radius, origin.z + 0.05,
+                 origin.x + math.cos(a2) * radius, origin.y + math.sin(a2) * radius, origin.z + 0.05, cr, cg, cb, 220)
     end
 end
 
--- Shape test flags: map (1) | vehicles (2) | peds (8) | objects (16) | vegetation (256).
-local CLEARANCE_FLAGS = 1 | 2 | 8 | 16
-if Config.Placement.clearanceIncludeVegetation then
-    CLEARANCE_FLAGS = CLEARANCE_FLAGS | 256
-end
-local CLEARANCE_START = Config.Placement.clearanceStartHeight or 0.4
-local CLEARANCE_RECHECK_MS = 150
-
-local function shapeTestResult(handle)
-    local status, hit
-    repeat
-        status, hit = GetShapeTestResult(handle)
-        if status == 1 then Wait(0) end
-    until status ~= 1
-    return hit == 1 or hit == true
-end
-
--- True if something solid (prop, building, tree, ped, vehicle) occupies the
--- space the hive would spawn into. A capsule sweep covers collidable map and
--- world props; a pool scan also catches spawned objects without collision.
--- The sweep starts CLEARANCE_START above the ground so the terrain itself
--- (including sloped ground under the footprint) doesn't count as blocking.
-local function isSpaceBlocked(pos, radius, height, ghost, ped)
-    local bottom = pos.z + CLEARANCE_START
-    local top = math.max(bottom + 0.1, pos.z + height)
-    local handle = StartShapeTestCapsule(pos.x, pos.y, bottom, pos.x, pos.y, top, radius, CLEARANCE_FLAGS, ped, 7)
-    if shapeTestResult(handle) then return true end
-
-    local reach = radius + 0.25
-    for _, obj in ipairs(GetGamePool('CObject')) do
-        if obj ~= ghost and not IsEntityAttached(obj) and #(GetEntityCoords(obj) - pos) < reach then
-            return true
-        end
+-- Ground height at x,y, searching from just above the player so it works on
+-- slopes, hills and under trees. Falls back to the player's feet.
+local function groundAt(x, y, refZ)
+    for _, up in ipairs({ 1.5, 3.0, 6.0 }) do
+        local found, z = GetGroundZFor_3dCoord(x, y, refZ + up, false)
+        if found and math.abs(z - refZ) < 4.0 then return z end
     end
-    return false
+    return refZ - 1.0
 end
 
 local function loadModel(model)
@@ -124,14 +68,9 @@ function Placement.Start(model, checkFn, invalidMsg)
     Placement.Active = true
     Placement.Ghost = ghost
 
-    -- Footprint of the hive model, used for the clear-space check.
-    local minDim, maxDim = GetModelDimensions(hash)
-    local footprint = math.max(maxDim.x - minDim.x, maxDim.y - minDim.y) * 0.5
-    local clearRadius = math.max(0.2, footprint + (cfg.clearancePadding or 0.0))
-    local clearHeight = maxDim.z - minDim.z
-    local lastCheckAt, lastCheckPos, blocked = 0, nil, false
-
-    local heading, heightOffset = GetEntityHeading(ped), 0.0
+    local dist = cfg.placeDistance or 1.5
+    local rotOffset, heightOffset = 0.0, 0.0
+    local heading = GetEntityHeading(ped)
     local result, resultHeading = nil, nil
     SendNUIMessage({
         action = 'placementShow',
@@ -147,7 +86,6 @@ function Placement.Start(model, checkFn, invalidMsg)
         },
     })
 
-    -- Only push to the HUD when something it shows actually changed.
     local lastHud = {}
     local function updateHud(valid, reason)
         local h, off = math.floor(heading + 0.5) % 360, math.floor(heightOffset * 100 + 0.5) / 100
@@ -160,49 +98,36 @@ function Placement.Start(model, checkFn, invalidMsg)
         Wait(0)
         for _, c in pairs(CONTROLS) do DisableControlAction(0, c, true) end
         DisableControlAction(0, 0xB2F377E8, true) -- melee attack
-        DisableControlAction(0, 0x8FFC75D6, true) -- sprint
 
-        local hit, coords = camRaycast(cfg.maxDistance + 6.0, ghost)
         local pedPos = GetEntityCoords(ped)
-        local valid, reason = false, nil
+        local pedHeading = GetEntityHeading(ped)
+        local r = math.rad(pedHeading)
+        local x, y = pedPos.x - math.sin(r) * dist, pedPos.y + math.cos(r) * dist
+        local pos = vector3(x, y, groundAt(x, y, pedPos.z) + heightOffset)
+        heading = (pedHeading + rotOffset) % 360
 
-        if hit then
-            local pos = coords + vector3(0, 0, heightOffset)
-            SetEntityCoordsNoOffset(ghost, pos.x, pos.y, pos.z, false, false, false)
-            SetEntityHeading(ghost, heading)
+        SetEntityCoordsNoOffset(ghost, pos.x, pos.y, pos.z, false, false, false)
+        SetEntityHeading(ghost, heading)
 
-            if #(pedPos - coords) > cfg.maxDistance then
-                reason = locale('place_too_far')
-            else
-                valid, reason = true, nil
-                if checkFn then valid, reason = checkFn(pos) end
-
-                if valid and cfg.requireClearSpace ~= false then
-                    local now = GetGameTimer()
-                    if not lastCheckPos or now - lastCheckAt >= CLEARANCE_RECHECK_MS or #(lastCheckPos - pos) > 0.1 then
-                        blocked = isSpaceBlocked(pos, clearRadius, clearHeight, ghost, ped)
-                        lastCheckAt, lastCheckPos = now, pos
-                    end
-                    if blocked then valid, reason = false, locale('place_obstructed') end
-                end
-            end
-
-            drawAxis(pos, heading)
-            drawRing(pos, cfg.ringRadius, valid)
+        local valid, reason = true, nil
+        if IsEntityInWater(ped) or GetInteriorFromEntity(ped) ~= 0 then
+            valid, reason = false, invalidMsg
+        elseif checkFn then
+            valid, reason = checkFn(pos)
         end
 
-        updateHud(hit and valid, reason or (not hit and invalidMsg) or nil)
+        drawRing(pos, cfg.ringRadius or 0.6, valid)
+        updateHud(valid, reason)
 
-        -- frame-rate independent rotate / height
         local dt = GetFrameTime()
-        if IsDisabledControlPressed(0, CONTROLS.rotL) then heading = (heading + cfg.rotateSpeed * dt) % 360 end
-        if IsDisabledControlPressed(0, CONTROLS.rotR) then heading = (heading - cfg.rotateSpeed * dt) % 360 end
+        if IsDisabledControlPressed(0, CONTROLS.rotL) then rotOffset = (rotOffset + cfg.rotateSpeed * dt) % 360 end
+        if IsDisabledControlPressed(0, CONTROLS.rotR) then rotOffset = (rotOffset - cfg.rotateSpeed * dt) % 360 end
         if IsDisabledControlPressed(0, CONTROLS.up)   then heightOffset = math.min(heightOffset + cfg.heightSpeed * dt, cfg.heightMax) end
         if IsDisabledControlPressed(0, CONTROLS.down) then heightOffset = math.max(heightOffset - cfg.heightSpeed * dt, -cfg.heightMax) end
 
         if IsDisabledControlJustPressed(0, CONTROLS.place) then
-            if hit and valid then
-                result, resultHeading = GetEntityCoords(ghost), heading
+            if valid then
+                result, resultHeading = pos, heading
                 break
             else
                 notify(reason or invalidMsg)
