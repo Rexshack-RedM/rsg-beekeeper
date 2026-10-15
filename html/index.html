@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Beehive</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div id="app" class="hidden">
+        <div class="beehive-panel">
+            <div class="panel-header">
+                <span class="header-spacer"></span>
+                <div class="header-text">
+                    <h1 id="panelTitle">The Apiary</h1>
+                    <div class="panel-sub" id="hiveStatusLabel">Hive Inactive</div>
+                </div>
+                <button id="closeBtn" class="icon-btn" title="Close">&#10005;</button>
+            </div>
+
+            <div class="divider"><span>&#9670;</span></div>
+
+            <div class="panel-body">
+                <div id="inactiveView" class="view hidden">
+                    <div class="hive-icon empty"></div>
+                    <p id="inactiveFlavorText" class="flavor-text">This hive stands silent and empty. No colony will take root without a queen to lead it.</p>
+                    <button id="addQueenBtn" class="row-btn">
+                        <span class="row-icon">&#9813;</span>
+                        <span class="row-text">
+                            <span id="addQueenLabel" class="row-title">Add Queen Bee</span>
+                            <span id="addQueenSub" class="row-sub">Use 1x Queen Bee</span>
+                        </span>
+                    </button>
+                </div>
+
+                <div id="activeView" class="view hidden">
+                    <p id="activeFlavorText" class="flavor-text">The hum of a living colony fills the air. The queen has taken her throne.</p>
+
+                    <div class="stat">
+                        <div class="stat-label">
+                            <span id="populationLabel">Bee Population</span>
+                            <span id="populationCount">0 / 200</span>
+                        </div>
+                        <div class="stat-track"><div id="populationFill" class="stat-fill stat-warn"></div></div>
+                    </div>
+
+                    <p id="upkeepNotice" class="notice hidden">The colony is still growing. Food and water won't be needed until the hive reaches full strength.</p>
+
+                    <div id="upkeepSection" class="upkeep hidden">
+                        <div class="stat">
+                            <div class="stat-label">
+                                <span id="foodLabel">Food</span>
+                                <span id="foodCount">100%</span>
+                            </div>
+                            <div class="stat-track"><div id="foodFill" class="stat-fill"></div></div>
+                            <button id="addFoodBtn" class="wood-btn hidden">Add Bee Food</button>
+                        </div>
+
+                        <div class="stat">
+                            <div class="stat-label">
+                                <span id="waterLabel">Water</span>
+                                <span id="waterCount">100%</span>
+                            </div>
+                            <div class="stat-track"><div id="waterFill" class="stat-fill"></div></div>
+                            <button id="addWaterBtn" class="wood-btn hidden">Pour Water Bucket</button>
+                        </div>
+
+                        <div class="stat">
+                            <div class="stat-label">
+                                <span id="healthLabel">Health</span>
+                                <span id="healthCount">100%</span>
+                            </div>
+                            <div class="stat-track"><div id="healthFill" class="stat-fill"></div></div>
+                        </div>
+
+                        <div class="stat">
+                            <div class="stat-label">
+                                <span id="honeyLabel">Honey</span>
+                                <span id="honeyCount">0%</span>
+                            </div>
+                            <div class="stat-track"><div id="honeyFill" class="stat-fill stat-warn"></div></div>
+                            <button id="harvestHoneyBtn" class="wood-btn hidden">Harvest Honey</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="busyView" class="view hidden">
+                    <div class="spinner"></div>
+                    <p id="busyFlavorText" class="flavor-text">Working the hive&hellip;</p>
+                </div>
+            </div>
+
+            <div id="panelActions" class="panel-actions">
+                <button id="pickupBtn" class="row-btn">
+                    <span class="row-icon">&#8634;</span>
+                    <span class="row-text">
+                        <span id="pickupLabel" class="row-title">Pick Up Beehive</span>
+                        <span id="pickupSub" class="row-sub">Return hive to your inventory</span>
+                    </span>
+                </button>
+                <p id="notOwnerNote" class="notice hidden">Only the owner can harvest or pick up this hive.</p>
+            </div>
+
+            <div class="panel-footer">
+                <span id="footerMessage"></span>
+            </div>
+        </div>
+    </div>
+
+    <div id="placeHud" class="place-hud hidden">
+        <div class="place-hud-title" id="placeHudTitle">Place Beehive</div>
+        <div class="ink-divider"></div>
+
+        <div class="place-keys">
+            <div class="place-key"><span class="kbd">LMB</span><span id="placeHudPlace">Place</span></div>
+            <div class="place-key"><span class="kbd">&larr; / &rarr;</span><span id="placeHudRotate">Rotate</span></div>
+            <div class="place-key"><span class="kbd">&uarr; / &darr;</span><span id="placeHudHeight">Height</span></div>
+            <div class="place-key"><span class="kbd">RMB / &#9003;</span><span id="placeHudCancel">Cancel</span></div>
+        </div>
+
+        <div class="place-readout">
+            <span><span id="placeHudHeadingLabel">Heading</span> <b id="placeHudHeading">0&deg;</b></span>
+            <span><span id="placeHudHeightLabel">Height</span> <b id="placeHudHeightVal">0.00 m</b></span>
+        </div>
+
+        <div id="placeHudStatus" class="place-status invalid">
+            <span class="status-dot"></span>
+            <span id="placeHudReason"></span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
