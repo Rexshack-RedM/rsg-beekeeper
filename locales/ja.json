@@ -85,9 +85,7 @@
     "inventory_full": "インベントリに十分な空きがありません。",
     "nui_pickup_confirm": "もう一度クリックして確定",
     "nui_not_owner_note": "この巣箱の採取と回収は所有者のみ可能です。",
-    "place_too_far": "遠すぎます",
     "place_too_close": "他の巣箱に近すぎます",
-    "place_obstructed": "何かが邪魔をしています。巣箱には空きスペースが必要です",
     "place_hud_title": "巣箱を設置",
     "place_hud_place": "設置",
     "place_hud_rotate": "回転",
@@ -95,5 +93,6 @@
     "place_hud_cancel": "キャンセル",
     "place_hud_valid": "設置できます",
     "place_hud_heading_label": "向き",
-    "place_hud_height_label": "高さ"
+    "place_hud_height_label": "高さ",
+    "hive_pickup_honey_ready": "この巣箱には収穫できる蜂蜜があります。巣箱を回収する前に収穫してください。"
 }

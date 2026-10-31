@@ -85,9 +85,7 @@
     "inventory_full": "You don't have enough space in your inventory.",
     "nui_pickup_confirm": "Click again to confirm",
     "nui_not_owner_note": "Only the owner can harvest or pick up this hive.",
-    "place_too_far": "Too far away",
     "place_too_close": "Too close to another beehive",
-    "place_obstructed": "Something is in the way, the hive needs clear space",
     "place_hud_title": "Place Beehive",
     "place_hud_place": "Place",
     "place_hud_rotate": "Rotate",
@@ -95,5 +93,6 @@
     "place_hud_cancel": "Cancel",
     "place_hud_valid": "Ready to place",
     "place_hud_heading_label": "Heading",
-    "place_hud_height_label": "Raise"
+    "place_hud_height_label": "Raise",
+    "hive_pickup_honey_ready": "This hive has honey ready -- harvest it before picking the hive up."
 }

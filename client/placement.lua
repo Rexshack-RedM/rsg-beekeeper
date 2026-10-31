@@ -1,7 +1,22 @@
 -- Simple placement: the ghost hive sits on the ground a short distance in
 -- front of the player and follows them as they walk. Turn/walk to position it,
 -- use the arrow keys to rotate / fine-tune height, LMB to place.
+RSGCore = exports['rsg-core']:GetCoreObject()
 Placement = {}
+
+-- Shared model loader (also used by client.lua). Returns the hash or nil on timeout.
+function BeekeeperLoadModel(model)
+    local hash = type(model) == 'number' and model or joaat(model)
+    if not IsModelValid(hash) then return nil end
+    if HasModelLoaded(hash) then return hash end
+    RequestModel(hash, false)
+    local timeout = GetGameTimer() + 5000
+    while not HasModelLoaded(hash) do
+        if GetGameTimer() > timeout then return nil end
+        Wait(10)
+    end
+    return hash
+end
 
 local CONTROLS = {
     place   = 0x07CE1E61, -- LMB
@@ -34,17 +49,10 @@ local function groundAt(x, y, refZ)
     return refZ - 1.0
 end
 
-local function loadModel(model)
-    local hash = type(model) == 'number' and model or joaat(model)
-    if not IsModelValid(hash) then return nil end
-    local ok = pcall(lib.requestModel, hash, 5000)
-    return ok and hash or nil
-end
-
 Placement.Active = false
 
 local function notify(description)
-    lib.notify({ title = locale('title_beehive'), description = description, type = 'error', duration = 5000 })
+    RSGCore.Functions.Notify({ title = locale('title_beehive'), description = description, type = 'error', duration = 5000 })
 end
 
 ---Starts placement and blocks until the player places or cancels.
@@ -53,7 +61,7 @@ end
 function Placement.Start(model, checkFn, invalidMsg)
     if Placement.Active then return nil end
 
-    local hash = loadModel(model)
+    local hash = BeekeeperLoadModel(model)
     if not hash then return nil end
 
     local cfg = Config.Placement

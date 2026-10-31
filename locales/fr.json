@@ -85,9 +85,7 @@
     "inventory_full": "Vous n'avez pas assez de place dans votre inventaire.",
     "nui_pickup_confirm": "Cliquez à nouveau pour confirmer",
     "nui_not_owner_note": "Seul le propriétaire peut récolter ou ramasser cette ruche.",
-    "place_too_far": "Trop loin",
     "place_too_close": "Trop près d'une autre ruche",
-    "place_obstructed": "Quelque chose gêne, la ruche a besoin d'espace libre",
     "place_hud_title": "Placer la ruche",
     "place_hud_place": "Placer",
     "place_hud_rotate": "Pivoter",
@@ -95,5 +93,6 @@
     "place_hud_cancel": "Annuler",
     "place_hud_valid": "Prêt à placer",
     "place_hud_heading_label": "Orientation",
-    "place_hud_height_label": "Hauteur"
+    "place_hud_height_label": "Hauteur",
+    "hive_pickup_honey_ready": "Cette ruche contient du miel prêt -- récoltez-le avant de ramasser la ruche."
 }

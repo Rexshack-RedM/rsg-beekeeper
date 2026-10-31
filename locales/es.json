@@ -85,9 +85,7 @@
     "inventory_full": "No tienes suficiente espacio en tu inventario.",
     "nui_pickup_confirm": "Haz clic otra vez para confirmar",
     "nui_not_owner_note": "Solo el dueño puede cosechar o recoger esta colmena.",
-    "place_too_far": "Demasiado lejos",
     "place_too_close": "Demasiado cerca de otra colmena",
-    "place_obstructed": "Hay algo en medio, la colmena necesita espacio libre",
     "place_hud_title": "Colocar colmena",
     "place_hud_place": "Colocar",
     "place_hud_rotate": "Girar",
@@ -95,5 +93,6 @@
     "place_hud_cancel": "Cancelar",
     "place_hud_valid": "Listo para colocar",
     "place_hud_heading_label": "Orientación",
-    "place_hud_height_label": "Altura"
+    "place_hud_height_label": "Altura",
+    "hive_pickup_honey_ready": "Esta colmena tiene miel lista -- cosécharla antes de recoger la colmena."
 }

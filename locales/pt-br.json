@@ -85,9 +85,7 @@
     "inventory_full": "Você não tem espaço suficiente no inventário.",
     "nui_pickup_confirm": "Clique novamente para confirmar",
     "nui_not_owner_note": "Só o dono pode colher ou recolher esta colmeia.",
-    "place_too_far": "Longe demais",
     "place_too_close": "Perto demais de outra colmeia",
-    "place_obstructed": "Algo está no caminho, a colmeia precisa de espaço livre",
     "place_hud_title": "Posicionar colmeia",
     "place_hud_place": "Posicionar",
     "place_hud_rotate": "Girar",
@@ -95,5 +93,6 @@
     "place_hud_cancel": "Cancelar",
     "place_hud_valid": "Pronto para posicionar",
     "place_hud_heading_label": "Direção",
-    "place_hud_height_label": "Altura"
+    "place_hud_height_label": "Altura",
+    "hive_pickup_honey_ready": "Esta colmeia tem mel pronto -- colha antes de recolher a colmeia."
 }

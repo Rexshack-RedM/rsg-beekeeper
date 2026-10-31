@@ -85,9 +85,7 @@
     "inventory_full": "Nie masz wystarczająco miejsca w ekwipunku.",
     "nui_pickup_confirm": "Kliknij ponownie, aby potwierdzić",
     "nui_not_owner_note": "Tylko właściciel może zbierać z tego ula lub go podnieść.",
-    "place_too_far": "Za daleko",
     "place_too_close": "Za blisko innego ula",
-    "place_obstructed": "Coś przeszkadza, ul potrzebuje wolnego miejsca",
     "place_hud_title": "Postaw ul",
     "place_hud_place": "Postaw",
     "place_hud_rotate": "Obróć",
@@ -95,5 +93,6 @@
     "place_hud_cancel": "Anuluj",
     "place_hud_valid": "Gotowe do postawienia",
     "place_hud_heading_label": "Kierunek",
-    "place_hud_height_label": "Wysokość"
+    "place_hud_height_label": "Wysokość",
+    "hive_pickup_honey_ready": "Ten ul ma gotowy miód -- zbierz go, zanim podniesiesz ul."
 }

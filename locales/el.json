@@ -85,9 +85,7 @@
     "inventory_full": "Δεν έχεις αρκετό χώρο στο απόθεμά σου.",
     "nui_pickup_confirm": "Κάνε ξανά κλικ για επιβεβαίωση",
     "nui_not_owner_note": "Μόνο ο ιδιοκτήτης μπορεί να τρυγήσει ή να μαζέψει αυτή την κυψέλη.",
-    "place_too_far": "Πολύ μακριά",
     "place_too_close": "Πολύ κοντά σε άλλη κυψέλη",
-    "place_obstructed": "Κάτι εμποδίζει, η κυψέλη χρειάζεται ελεύθερο χώρο",
     "place_hud_title": "Τοποθέτηση κυψέλης",
     "place_hud_place": "Τοποθέτηση",
     "place_hud_rotate": "Περιστροφή",
@@ -95,5 +93,6 @@
     "place_hud_cancel": "Ακύρωση",
     "place_hud_valid": "Έτοιμο για τοποθέτηση",
     "place_hud_heading_label": "Κατεύθυνση",
-    "place_hud_height_label": "Ύψος"
+    "place_hud_height_label": "Ύψος",
+    "hive_pickup_honey_ready": "Αυτή η κυψέλη έχει έτοιμο μέλι -- τρύγησέ το πριν σηκώσεις την κυψέλη."
 }

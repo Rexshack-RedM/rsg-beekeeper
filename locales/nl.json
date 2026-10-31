@@ -85,9 +85,7 @@
     "inventory_full": "Je hebt niet genoeg ruimte in je inventaris.",
     "nui_pickup_confirm": "Klik nogmaals om te bevestigen",
     "nui_not_owner_note": "Alleen de eigenaar kan deze korf oogsten of oppakken.",
-    "place_too_far": "Te ver weg",
     "place_too_close": "Te dicht bij een andere bijenkorf",
-    "place_obstructed": "Er staat iets in de weg, de korf heeft vrije ruimte nodig",
     "place_hud_title": "Bijenkorf plaatsen",
     "place_hud_place": "Plaatsen",
     "place_hud_rotate": "Draaien",
@@ -95,5 +93,6 @@
     "place_hud_cancel": "Annuleren",
     "place_hud_valid": "Klaar om te plaatsen",
     "place_hud_heading_label": "Richting",
-    "place_hud_height_label": "Hoogte"
+    "place_hud_height_label": "Hoogte",
+    "hive_pickup_honey_ready": "Deze bijenkast heeft honing klaar -- oogst die voordat je de kast oppakt."
 }

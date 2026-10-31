@@ -1,5 +1,4 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
-lib.locale()
 
 local Beehive = Config.Beehive
 local POP_MAX = Beehive.population.max
@@ -53,7 +52,7 @@ end)
 --------------------------------------------------------------------------------------------------
 
 local function Notify(source, description, notifyType)
-    TriggerClientEvent('ox_lib:notify', source, {
+    TriggerClientEvent('RSGCore:Client:Notify', source, {
         title = locale('title_beehive'),
         description = description,
         type = notifyType or 'inform',
@@ -76,7 +75,7 @@ end
 
 -- Server-side distance check against the player's real ped position -- every
 -- net event below can be fired by a modified client with arbitrary arguments,
--- so never trust ox_target's client-side distance gate on its own.
+-- so never trust rsg-target's client-side distance gate on its own.
 local function IsPlayerNearCoords(source, x, y, z, maxDistance)
     local ped = GetPlayerPed(source)
     if not ped or ped == 0 then return false end
@@ -84,12 +83,19 @@ local function IsPlayerNearCoords(source, x, y, z, maxDistance)
     return #(GetEntityCoords(ped) - vector3(x, y, z)) <= maxDistance
 end
 
+local Inventory = exports['rsg-inventory']
+
 local function CanCarry(source, itemName, amount)
-    local ok, result = pcall(function()
-        return exports['rsg-inventory']:CanAddItem(source, itemName, amount)
-    end)
-    -- If the export isn't available, fall back to letting AddItem decide.
-    return not ok or result ~= false
+    return Inventory:CanAddItem(source, itemName, amount) ~= false
+end
+
+-- rsg-inventory AddItem/RemoveItem fire the ItemBox themselves.
+local function GiveItem(source, itemName, amount, info, slot, reason)
+    return Inventory:AddItem(source, itemName, amount, info, slot, reason or 'rsg-beekeeper')
+end
+
+local function TakeItem(source, itemName, amount, slot, reason)
+    return Inventory:RemoveItem(source, itemName, amount, slot, reason or 'rsg-beekeeper')
 end
 
 -- One action at a time per player. Stops a modified client from firing the
@@ -119,8 +125,11 @@ local function WithLock(source, fn)
     end
 end
 
+local lastRequest = {} -- [source] = os.time() of their last full hive list request
+
 AddEventHandler('playerDropped', function()
     busy[source] = nil
+    lastRequest[source] = nil
 end)
 
 --------------------------------------------------------------------------------------------------
@@ -202,7 +211,11 @@ local function ScheduleCalmExpiry(id, smokedUntil)
     if remaining <= 0 then return end
 
     SetTimeout(remaining * 1000, function()
-        BroadcastToAll('rsg-beekeeper:client:hiveCalmExpired', id)
+        -- Skip if the hive was removed / re-smoked / died in the meantime.
+        local row = MySQL.single.await('SELECT smoked_until FROM rsg_beehives WHERE id = ?', { id })
+        if row and tonumber(row.smoked_until) == smokedUntil then
+            BroadcastToAll('rsg-beekeeper:client:hiveCalmExpired', id)
+        end
     end)
 end
 
@@ -346,7 +359,7 @@ RSGCore.Functions.CreateUseableItem(Beehive.smoker.item, function(source, item)
 
         -- Re-read the smoker from the player's inventory rather than trusting
         -- the item table passed to the callback (it can be stale).
-        local smoker = item and item.slot and exports['rsg-inventory']:GetItemBySlot(source, item.slot)
+        local smoker = item and item.slot and Inventory:GetItemBySlot(source, item.slot)
         if not smoker or smoker.name ~= cfg.item then return end
 
         local usesLeft = ((smoker.info and tonumber(smoker.info.uses)) or cfg.totalUses) - 1
@@ -364,18 +377,20 @@ RSGCore.Functions.CreateUseableItem(Beehive.smoker.item, function(source, item)
             return Notify(source, locale('hive_already_calm'), 'inform')
         end
 
-        if not Player.Functions.RemoveItem(cfg.item, 1, smoker.slot) then
+        if not TakeItem(source, cfg.item, 1, smoker.slot, 'beekeeper-smoker') then
             MySQL.update.await('UPDATE rsg_beehives SET smoked_until = ? WHERE id = ?', { closest.smoked_until, closest.id })
             return
         end
 
         if usesLeft > 0 then
-            Player.Functions.AddItem(cfg.item, 1, smoker.slot, { uses = usesLeft })
-        else
-            TriggerClientEvent('rsg-inventory:client:ItemBox', source, RSGCore.Shared.Items[cfg.item], 'remove', 1)
+            local newInfo = {}
+            for k, v in pairs(smoker.info or {}) do newInfo[k] = v end
+            newInfo.uses = usesLeft
+            GiveItem(source, cfg.item, 1, newInfo, smoker.slot, 'beekeeper-smoker')
         end
 
         BroadcastToAll('rsg-beekeeper:client:hiveSmoked', closest.id)
+        TriggerClientEvent('rsg-beekeeper:client:playSmokerAnim', source, vector3(closest.x, closest.y, closest.z))
         ScheduleCalmExpiry(closest.id, smokedUntil)
 
         Notify(source, usesLeft > 0 and locale('smoker_used_success', usesLeft) or locale('smoker_used_last'), 'success')
@@ -425,9 +440,7 @@ RegisterNetEvent('rsg-beekeeper:server:placeBeehive', function(coords, heading, 
             end
         end
 
-        if not Player.Functions.GetItemByName(entry.item) then return end
-        if not Player.Functions.RemoveItem(entry.item, 1) then return end
-        TriggerClientEvent('rsg-inventory:client:ItemBox', source, RSGCore.Shared.Items[entry.item], 'remove', 1)
+        if not TakeItem(source, entry.item, 1, nil, 'beekeeper-place') then return end
 
         local insertId = MySQL.insert.await('INSERT INTO rsg_beehives (citizenid, x, y, z, heading, prop) VALUES (?, ?, ?, ?, ?, ?)', {
             citizenid, x, y, z, heading, entry.prop,
@@ -435,7 +448,7 @@ RegisterNetEvent('rsg-beekeeper:server:placeBeehive', function(coords, heading, 
 
         if not insertId then
             -- Refund the item rather than silently eating it.
-            Player.Functions.AddItem(entry.item, 1)
+            GiveItem(source, entry.item, 1, nil, nil, 'beekeeper-place-refund')
             return Notify(source, locale('hive_place_failed'), 'error')
         end
 
@@ -458,10 +471,9 @@ end)
 -- Persistence load
 --------------------------------------------------------------------------------------------------
 
-local lastRequest = {} -- [source] = os.time() of their last full hive list request
-
 RegisterNetEvent('rsg-beekeeper:server:requestBeehives', function()
     local source = source
+    if not RSGCore.Functions.GetPlayer(source) then return end
 
     -- Pulls every hive on the server, so don't let a client spam it.
     local now = os.time()
@@ -482,10 +494,6 @@ RegisterNetEvent('rsg-beekeeper:server:requestBeehives', function()
     end
 
     TriggerClientEvent('rsg-beekeeper:client:loadBeehives', source, hives)
-end)
-
-AddEventHandler('playerDropped', function()
-    lastRequest[source] = nil
 end)
 
 --------------------------------------------------------------------------------------------------
@@ -604,11 +612,10 @@ RegisterNetEvent('rsg-beekeeper:server:addQueenBee', function(id)
             return Fail(source, id, locale('hive_already_active'))
         end
 
-        if not Player.Functions.RemoveItem(queenItem, 1) then
+        if not TakeItem(source, queenItem, 1, nil, 'beekeeper-queen') then
             MySQL.update.await('UPDATE rsg_beehives SET active = 0, activated_at = NULL WHERE id = ?', { id })
             return Fail(source, id, locale('queen_bee_remove_failed'))
         end
-        TriggerClientEvent('rsg-inventory:client:ItemBox', source, RSGCore.Shared.Items[queenItem], 'remove', 1)
 
         BroadcastToAll('rsg-beekeeper:client:beehiveActivated', id)
         ScheduleHiveFullCheck(id, activatedAt)
@@ -667,16 +674,14 @@ RegisterNetEvent('rsg-beekeeper:server:addHiveResource', function(id, resourceTy
             bucketUsesLeft = ((tonumber(originalInfo[usesKey])) or cfg.waterTotalUses or 1) - 1
         end
 
-        if not Player.Functions.RemoveItem(itemName, 1, invItem.slot) then
+        if not TakeItem(source, itemName, 1, invItem.slot, 'beekeeper-upkeep') then
             return Fail(source, id, locale('item_remove_failed'))
         end
         if not isFood and bucketUsesLeft > 0 then
             local newInfo = {}
             for k, v in pairs(originalInfo) do newInfo[k] = v end
             newInfo[usesKey] = bucketUsesLeft
-            Player.Functions.AddItem(itemName, 1, invItem.slot, newInfo)
-        else
-            TriggerClientEvent('rsg-inventory:client:ItemBox', source, RSGCore.Shared.Items[itemName], 'remove', 1)
+            GiveItem(source, itemName, 1, newInfo, invItem.slot, 'beekeeper-upkeep')
         end
 
         -- Atomic increment, so concurrent top-ups by different players stack
@@ -690,17 +695,16 @@ RegisterNetEvent('rsg-beekeeper:server:addHiveResource', function(id, resourceTy
         if not affected or affected == 0 then
             -- refund: restore the item exactly as it was
             if not isFood and bucketUsesLeft > 0 then
-                Player.Functions.RemoveItem(itemName, 1, invItem.slot)
+                TakeItem(source, itemName, 1, invItem.slot, 'beekeeper-upkeep-refund')
             end
-            Player.Functions.AddItem(itemName, 1, invItem.slot, originalInfo)
+            GiveItem(source, itemName, 1, originalInfo, invItem.slot, 'beekeeper-upkeep-refund')
             return Fail(source, id, locale('hive_update_failed'))
         end
 
         -- Hand back the empty bucket once the last use of water has been poured.
         local emptyItem = cfg.waterReturnItem
         if not isFood and bucketUsesLeft <= 0 and emptyItem and emptyItem ~= '' and RSGCore.Shared.Items[emptyItem] then
-            Player.Functions.AddItem(emptyItem, 1)
-            TriggerClientEvent('rsg-inventory:client:ItemBox', source, RSGCore.Shared.Items[emptyItem], 'add', 1)
+            GiveItem(source, emptyItem, 1, nil, nil, 'beekeeper-upkeep')
         end
 
         Succeed(source, id, locale('hive_resource_topped_up', resourceLabel:lower()))
@@ -751,10 +755,8 @@ RegisterNetEvent('rsg-beekeeper:server:harvestHoney', function(id)
             return Fail(source, id, locale('harvest_failed'))
         end
 
-        Player.Functions.AddItem(cfg.honeyCombItem, cfg.honeyCombAmount)
-        Player.Functions.AddItem(cfg.beeswaxItem, cfg.beeswaxAmount)
-        TriggerClientEvent('rsg-inventory:client:ItemBox', source, RSGCore.Shared.Items[cfg.honeyCombItem], 'add', cfg.honeyCombAmount)
-        TriggerClientEvent('rsg-inventory:client:ItemBox', source, RSGCore.Shared.Items[cfg.beeswaxItem], 'add', cfg.beeswaxAmount)
+        GiveItem(source, cfg.honeyCombItem, cfg.honeyCombAmount, nil, nil, 'beekeeper-harvest')
+        GiveItem(source, cfg.beeswaxItem, cfg.beeswaxAmount, nil, nil, 'beekeeper-harvest')
 
         Succeed(source, id, locale('harvest_success',
             cfg.honeyCombAmount, ItemLabel(cfg.honeyCombItem),
@@ -778,7 +780,7 @@ RegisterNetEvent('rsg-beekeeper:server:pickupBeehive', function(id)
     if not id then return end
 
     WithLock(source, function()
-        local Player, row = LoadHiveForAction(source, id, 'active, citizenid, prop')
+        local Player, row = LoadHiveForAction(source, id, 'active, citizenid, prop, honey')
         if not Player then return end
 
         local citizenid = Player.PlayerData.citizenid
@@ -790,6 +792,10 @@ RegisterNetEvent('rsg-beekeeper:server:pickupBeehive', function(id)
         local entry = propEntries[row.prop]
         if not entry then
             return Fail(source, id, locale('hive_pickup_item_missing'))
+        end
+
+        if Beehive.blockPickupWithHoney and IsActive(row.active) and (tonumber(row.honey) or 0) >= 100 then
+            return Fail(source, id, locale('hive_pickup_honey_ready'))
         end
 
         local active = IsActive(row.active)
@@ -804,13 +810,11 @@ RegisterNetEvent('rsg-beekeeper:server:pickupBeehive', function(id)
             return Fail(source, id, locale('hive_pickup_failed'))
         end
 
-        Player.Functions.AddItem(entry.item, 1)
-        TriggerClientEvent('rsg-inventory:client:ItemBox', source, RSGCore.Shared.Items[entry.item], 'add', 1)
+        GiveItem(source, entry.item, 1, nil, nil, 'beekeeper-pickup')
 
         -- A living colony's queen comes back with the hive.
         if active then
-            Player.Functions.AddItem(Beehive.queenBeeItem, 1)
-            TriggerClientEvent('rsg-inventory:client:ItemBox', source, RSGCore.Shared.Items[Beehive.queenBeeItem], 'add', 1)
+            GiveItem(source, Beehive.queenBeeItem, 1, nil, nil, 'beekeeper-pickup')
         end
 
         BroadcastToAll('rsg-beekeeper:client:removeBeehive', id)

@@ -85,9 +85,7 @@
     "inventory_full": "Du hast nicht genug Platz in deinem Inventar.",
     "nui_pickup_confirm": "Zum Bestätigen erneut klicken",
     "nui_not_owner_note": "Nur der Besitzer kann diesen Stock ernten oder aufheben.",
-    "place_too_far": "Zu weit entfernt",
     "place_too_close": "Zu nah an einem anderen Bienenstock",
-    "place_obstructed": "Etwas ist im Weg, der Stock braucht freien Platz",
     "place_hud_title": "Bienenstock platzieren",
     "place_hud_place": "Platzieren",
     "place_hud_rotate": "Drehen",
@@ -95,5 +93,6 @@
     "place_hud_cancel": "Abbrechen",
     "place_hud_valid": "Bereit zum Platzieren",
     "place_hud_heading_label": "Ausrichtung",
-    "place_hud_height_label": "Höhe"
+    "place_hud_height_label": "Höhe",
+    "hive_pickup_honey_ready": "Dieser Bienenstock hat fertigen Honig -- ernte ihn, bevor du den Stock aufhebst."
 }

@@ -7,8 +7,6 @@
 -- webhook URL throttled/banned by Discord.
 --------------------------------------------------------------------------------------------------
 
-lib.locale()
-
 BeekeeperWebhook = {}
 
 local queue = {}
@@ -30,13 +28,13 @@ local function ProcessQueue()
             local ok, err = pcall(function()
                 PerformHttpRequest(job.url, function(statusCode)
                     if statusCode ~= 200 and statusCode ~= 204 then
-                        print(('[rsg-beekeeper] ^1%s^7'):format(locale('webhook_post_failed'):format(tostring(statusCode), job.event)))
+                        print(('[rsg-beekeeper] ^1%s^7'):format(locale('webhook_post_failed', tostring(statusCode), job.event)))
                     end
                 end, 'POST', json.encode(job.payload), { ['Content-Type'] = 'application/json' })
             end)
 
             if not ok then
-                print(('[rsg-beekeeper] ^1%s^7'):format(locale('webhook_request_error'):format(job.event, tostring(err))))
+                print(('[rsg-beekeeper] ^1%s^7'):format(locale('webhook_request_error', job.event, tostring(err))))
             end
 
             if #queue > 0 then
@@ -61,7 +59,7 @@ local function ResolveEventConfig(eventName)
     return eventCfg, url
 end
 
--- fields: array of { name = string, value = string, inline = bool } (ox_lib/Discord embed field format)
+-- fields: array of { name = string, value = string, inline = bool } (Discord embed field format)
 function BeekeeperWebhook.Send(eventName, title, description, fields)
     local eventCfg, url = ResolveEventConfig(eventName)
     if not url then return end
@@ -100,7 +98,7 @@ RegisterCommand('beehivewebhook', function(source)
 
     local cfg = Config.Webhooks
     if not cfg or not cfg.enabled then
-        TriggerClientEvent('ox_lib:notify', source, { title = locale('title_beehive_webhooks'), description = locale('webhook_disabled'), type = 'error' })
+        TriggerClientEvent('RSGCore:Client:Notify', source, { title = locale('title_beehive_webhooks'), description = locale('webhook_disabled'), type = 'error', duration = 5000 })
         return
     end
 
@@ -108,5 +106,5 @@ RegisterCommand('beehivewebhook', function(source)
         { name = locale('webhook_field_triggered_by'), value = GetPlayerName(source) or locale('unknown_value'), inline = true },
     })
 
-    TriggerClientEvent('ox_lib:notify', source, { title = locale('title_beehive_webhooks'), description = locale('webhook_test_queued'), type = 'success' })
+    TriggerClientEvent('RSGCore:Client:Notify', source, { title = locale('title_beehive_webhooks'), description = locale('webhook_test_queued'), type = 'success', duration = 5000 })
 end, true)
