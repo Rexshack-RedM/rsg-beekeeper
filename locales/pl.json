@@ -3,7 +3,6 @@
     "title_beehive": "Ul",
     "title_beehive_webhooks": "Webhooki uli",
     "placement_already_placing": "Już stawiasz ul.",
-    "placement_cannot_place": "Nie możesz postawić ula w tym miejscu.",
     "placement_cancelled": "Stawianie anulowane.",
     "hive_colony_died": "Rodzina zagłodziła się, a królowa zginęła. Ul jest pusty -- dodaj nową królową, aby założyć nową rodzinę.",
     "hive_not_found": "Ten ul już nie istnieje.",
@@ -87,12 +86,5 @@
     "nui_not_owner_note": "Tylko właściciel może zbierać z tego ula lub go podnieść.",
     "place_too_close": "Za blisko innego ula",
     "place_hud_title": "Postaw ul",
-    "place_hud_place": "Postaw",
-    "place_hud_rotate": "Obróć",
-    "place_hud_height": "Wysokość",
-    "place_hud_cancel": "Anuluj",
-    "place_hud_valid": "Gotowe do postawienia",
-    "place_hud_heading_label": "Kierunek",
-    "place_hud_height_label": "Wysokość",
     "hive_pickup_honey_ready": "Ten ul ma gotowy miód -- zbierz go, zanim podniesiesz ul."
 }

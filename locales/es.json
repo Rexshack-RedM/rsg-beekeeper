@@ -3,7 +3,6 @@
     "title_beehive": "Colmena",
     "title_beehive_webhooks": "Webhooks de colmenas",
     "placement_already_placing": "Ya estás colocando una colmena.",
-    "placement_cannot_place": "No puedes colocar la colmena ahí.",
     "placement_cancelled": "Colocación cancelada.",
     "hive_colony_died": "La colonia ha muerto de hambre y la reina ha muerto. La colmena está vacía -- añade una nueva abeja reina para empezar otra colonia.",
     "hive_not_found": "Esa colmena ya no existe.",
@@ -87,12 +86,5 @@
     "nui_not_owner_note": "Solo el dueño puede cosechar o recoger esta colmena.",
     "place_too_close": "Demasiado cerca de otra colmena",
     "place_hud_title": "Colocar colmena",
-    "place_hud_place": "Colocar",
-    "place_hud_rotate": "Girar",
-    "place_hud_height": "Altura",
-    "place_hud_cancel": "Cancelar",
-    "place_hud_valid": "Listo para colocar",
-    "place_hud_heading_label": "Orientación",
-    "place_hud_height_label": "Altura",
     "hive_pickup_honey_ready": "Esta colmena tiene miel lista -- cosécharla antes de recoger la colmena."
 }

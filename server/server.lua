@@ -13,37 +13,42 @@ local RestoreSchedules -- defined below; runs once the table is confirmed to exi
 -- Database bootstrap
 --------------------------------------------------------------------------------------------------
 
--- Creates the rsg_beehives table on startup so operators don't have to import
--- installation/rsg_beehives.sql by hand (that file is kept as a reference).
-MySQL.ready(function()
-    local ok = pcall(MySQL.query.await, [[
-        CREATE TABLE IF NOT EXISTS `rsg_beehives` (
-          `id` INT NOT NULL AUTO_INCREMENT,
-          `citizenid` VARCHAR(50) DEFAULT NULL,
-          `x` FLOAT NOT NULL,
-          `y` FLOAT NOT NULL,
-          `z` FLOAT NOT NULL,
-          `heading` FLOAT NOT NULL DEFAULT 0,
-          `active` TINYINT(1) NOT NULL DEFAULT 0,
-          `activated_at` INT UNSIGNED DEFAULT NULL,
-          `food` TINYINT UNSIGNED NOT NULL DEFAULT 100,
-          `water` TINYINT UNSIGNED NOT NULL DEFAULT 100,
-          `health` TINYINT UNSIGNED NOT NULL DEFAULT 100,
-          `honey` TINYINT UNSIGNED NOT NULL DEFAULT 0,
-          `smoked_until` INT UNSIGNED DEFAULT NULL,
-          `prop` VARCHAR(50) NOT NULL DEFAULT 'bee_house_gk_1',
-          `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          PRIMARY KEY (`id`),
-          KEY `idx_citizenid` (`citizenid`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    ]])
+-- Builds the rsg_beehives table on start (Config.AutoDatabase). Keep this
+-- schema identical to install.sql, which stays available for manual installs.
+local SCHEMA = [[
+CREATE TABLE IF NOT EXISTS `rsg_beehives` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `citizenid` VARCHAR(50) DEFAULT NULL,
+  `x` FLOAT NOT NULL,
+  `y` FLOAT NOT NULL,
+  `z` FLOAT NOT NULL,
+  `heading` FLOAT NOT NULL DEFAULT 0,
+  `active` TINYINT(1) NOT NULL DEFAULT 0,
+  `activated_at` INT UNSIGNED DEFAULT NULL,
+  `food` TINYINT UNSIGNED NOT NULL DEFAULT 100,
+  `water` TINYINT UNSIGNED NOT NULL DEFAULT 100,
+  `health` TINYINT UNSIGNED NOT NULL DEFAULT 100,
+  `honey` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `smoked_until` INT UNSIGNED DEFAULT NULL,
+  `prop` VARCHAR(50) NOT NULL DEFAULT 'bee_house_gk_1',
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_citizenid` (`citizenid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+]]
 
+local function ensureDatabase()
+    local ok, err = pcall(MySQL.query.await, SCHEMA)
     if not ok then
-        print('^1[rsg-beekeeper]^7 Failed to create/verify the rsg_beehives table -- check your database connection and oxmysql setup.')
-        return
+        print(('^1[rsg-beekeeper]^7 Failed to create/verify the rsg_beehives table: %s'):format(tostring(err)))
+        return false
     end
+    print('^2[rsg-beekeeper]^7 Database tables ready.')
+    return true
+end
 
-    print('^2[rsg-beekeeper]^7 Database ready.')
+MySQL.ready(function()
+    if Config.AutoDatabase and not ensureDatabase() then return end
     RestoreSchedules()
 end)
 
@@ -98,6 +103,19 @@ local function TakeItem(source, itemName, amount, slot, reason)
     return Inventory:RemoveItem(source, itemName, amount, slot, reason or 'rsg-beekeeper')
 end
 
+-- Re-adds a just-removed item with updated metadata, preferring its old slot
+-- and falling back to any free slot so the item is never lost.
+local function ReturnItem(source, itemName, info, slot, reason)
+    return GiveItem(source, itemName, 1, info, slot, reason) or GiveItem(source, itemName, 1, info, nil, reason)
+end
+
+local function CopyInfo(info, key, value)
+    local copy = {}
+    for k, v in pairs(info or {}) do copy[k] = v end
+    copy[key] = value
+    return copy
+end
+
 -- One action at a time per player. Stops a modified client from firing the
 -- same (or different) item-moving events back-to-back while an earlier
 -- request's async DB work is still in flight -- the root cause of most
@@ -126,10 +144,12 @@ local function WithLock(source, fn)
 end
 
 local lastRequest = {} -- [source] = os.time() of their last full hive list request
+local lastInfo = {}    -- [source] = GetGameTimer() of their last hive info request
 
 AddEventHandler('playerDropped', function()
     busy[source] = nil
     lastRequest[source] = nil
+    lastInfo[source] = nil
 end)
 
 --------------------------------------------------------------------------------------------------
@@ -383,10 +403,7 @@ RSGCore.Functions.CreateUseableItem(Beehive.smoker.item, function(source, item)
         end
 
         if usesLeft > 0 then
-            local newInfo = {}
-            for k, v in pairs(smoker.info or {}) do newInfo[k] = v end
-            newInfo.uses = usesLeft
-            GiveItem(source, cfg.item, 1, newInfo, smoker.slot, 'beekeeper-smoker')
+            ReturnItem(source, cfg.item, CopyInfo(smoker.info, 'uses', usesLeft), smoker.slot, 'beekeeper-smoker')
         end
 
         BroadcastToAll('rsg-beekeeper:client:hiveSmoked', closest.id)
@@ -409,16 +426,18 @@ RegisterNetEvent('rsg-beekeeper:server:placeBeehive', function(coords, heading, 
         if not Player then return end
 
         if type(coords) ~= 'vector3' and type(coords) ~= 'table' then return end
-        local x, y, z = tonumber(coords.x), tonumber(coords.y), tonumber(coords.z)
-        if not x or not y or not z then return end
 
-        heading = (tonumber(heading) or 0.0) % 360.0
+        -- rsg-gizmo rejects NaN/inf coords and checks the real ped distance.
+        if not exports['rsg-gizmo']:IsPlacementValid(source, coords, Config.Placement.maxDistance) then return end
+        local x, y, z = coords.x + 0.0, coords.y + 0.0, coords.z + 0.0
+
+        heading = tonumber(heading) or 0.0
+        if heading ~= heading or heading == math.huge or heading == -math.huge then heading = 0.0 end
+        heading = heading % 360.0
 
         -- The prop decides which item gets consumed, so it must be configured.
         local entry = type(prop) == 'string' and propEntries[prop]
         if not entry then return end
-
-        if not IsPlayerNearCoords(source, x, y, z, Config.Placement.maxDistance + Config.ProximityBuffer) then return end
 
         -- Same spacing rule the client gizmo enforces.
         local spacing = Config.Placement.minHiveSpacing
@@ -533,6 +552,11 @@ RegisterNetEvent('rsg-beekeeper:server:getHiveInfo', function(id, isRefresh)
     local source = source
     if not RSGCore.Functions.GetPlayer(source) then return end
 
+    -- Each request is a DB read; the panel refreshes every 5s, so 1s is plenty.
+    local now = GetGameTimer()
+    if lastInfo[source] and now - lastInfo[source] < 1000 then return end
+    lastInfo[source] = now
+
     id = tonumber(id)
     if not id then return end
 
@@ -596,7 +620,7 @@ RegisterNetEvent('rsg-beekeeper:server:addQueenBee', function(id)
         end
 
         local queenItem = Beehive.queenBeeItem
-        if not Player.Functions.GetItemByName(queenItem) then
+        if not Inventory:GetItemByName(source, queenItem) then
             return Fail(source, id, locale('queen_bee_required'))
         end
 
@@ -660,7 +684,7 @@ RegisterNetEvent('rsg-beekeeper:server:addHiveResource', function(id, resourceTy
 
         -- Food uses the bee food item, water uses a full water bucket.
         local itemName = isFood and cfg.foodItem or cfg.waterItem
-        local invItem = Player.Functions.GetItemByName(itemName)
+        local invItem = Inventory:GetItemByName(source, itemName)
         if not invItem then
             return Fail(source, id, locale('item_required', ItemLabel(itemName)))
         end
@@ -678,10 +702,7 @@ RegisterNetEvent('rsg-beekeeper:server:addHiveResource', function(id, resourceTy
             return Fail(source, id, locale('item_remove_failed'))
         end
         if not isFood and bucketUsesLeft > 0 then
-            local newInfo = {}
-            for k, v in pairs(originalInfo) do newInfo[k] = v end
-            newInfo[usesKey] = bucketUsesLeft
-            GiveItem(source, itemName, 1, newInfo, invItem.slot, 'beekeeper-upkeep')
+            ReturnItem(source, itemName, CopyInfo(originalInfo, usesKey, bucketUsesLeft), invItem.slot, 'beekeeper-upkeep')
         end
 
         -- Atomic increment, so concurrent top-ups by different players stack
@@ -697,7 +718,7 @@ RegisterNetEvent('rsg-beekeeper:server:addHiveResource', function(id, resourceTy
             if not isFood and bucketUsesLeft > 0 then
                 TakeItem(source, itemName, 1, invItem.slot, 'beekeeper-upkeep-refund')
             end
-            GiveItem(source, itemName, 1, originalInfo, invItem.slot, 'beekeeper-upkeep-refund')
+            ReturnItem(source, itemName, originalInfo, invItem.slot, 'beekeeper-upkeep-refund')
             return Fail(source, id, locale('hive_update_failed'))
         end
 
@@ -740,7 +761,7 @@ RegisterNetEvent('rsg-beekeeper:server:harvestHoney', function(id)
             return Fail(source, id, locale('honey_not_ready'))
         end
 
-        if not Player.Functions.GetItemByName(cfg.harvestTool) then
+        if not Inventory:GetItemByName(source, cfg.harvestTool) then
             return Fail(source, id, locale('harvest_tool_required', ItemLabel(cfg.harvestTool)))
         end
 

@@ -3,7 +3,6 @@
     "title_beehive": "Ruche",
     "title_beehive_webhooks": "Webhooks des ruches",
     "placement_already_placing": "Vous êtes déjà en train de placer une ruche.",
-    "placement_cannot_place": "Vous ne pouvez pas placer la ruche ici.",
     "placement_cancelled": "Placement annulé.",
     "hive_colony_died": "La colonie est morte de faim et la reine a péri. La ruche est vide -- ajoutez une nouvelle reine pour relancer une colonie.",
     "hive_not_found": "Cette ruche n'existe plus.",
@@ -87,12 +86,5 @@
     "nui_not_owner_note": "Seul le propriétaire peut récolter ou ramasser cette ruche.",
     "place_too_close": "Trop près d'une autre ruche",
     "place_hud_title": "Placer la ruche",
-    "place_hud_place": "Placer",
-    "place_hud_rotate": "Pivoter",
-    "place_hud_height": "Hauteur",
-    "place_hud_cancel": "Annuler",
-    "place_hud_valid": "Prêt à placer",
-    "place_hud_heading_label": "Orientation",
-    "place_hud_height_label": "Hauteur",
     "hive_pickup_honey_ready": "Cette ruche contient du miel prêt -- récoltez-le avant de ramasser la ruche."
 }

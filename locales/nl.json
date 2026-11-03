@@ -3,7 +3,6 @@
     "title_beehive": "Bijenkorf",
     "title_beehive_webhooks": "Bijenkorf-webhooks",
     "placement_already_placing": "Je bent al een bijenkorf aan het plaatsen.",
-    "placement_cannot_place": "Je kunt de bijenkorf hier niet plaatsen.",
     "placement_cancelled": "Plaatsen geannuleerd.",
     "hive_colony_died": "Het volk is verhongerd en de koningin is gestorven. De korf is leeg -- voeg een nieuwe bijenkoningin toe om opnieuw een volk te starten.",
     "hive_not_found": "Die bijenkorf bestaat niet meer.",
@@ -87,12 +86,5 @@
     "nui_not_owner_note": "Alleen de eigenaar kan deze korf oogsten of oppakken.",
     "place_too_close": "Te dicht bij een andere bijenkorf",
     "place_hud_title": "Bijenkorf plaatsen",
-    "place_hud_place": "Plaatsen",
-    "place_hud_rotate": "Draaien",
-    "place_hud_height": "Hoogte",
-    "place_hud_cancel": "Annuleren",
-    "place_hud_valid": "Klaar om te plaatsen",
-    "place_hud_heading_label": "Richting",
-    "place_hud_height_label": "Hoogte",
     "hive_pickup_honey_ready": "Deze bijenkast heeft honing klaar -- oogst die voordat je de kast oppakt."
 }

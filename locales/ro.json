@@ -3,7 +3,6 @@
     "title_beehive": "Stup",
     "title_beehive_webhooks": "Webhook-uri stupi",
     "placement_already_placing": "Deja plasezi un stup.",
-    "placement_cannot_place": "Nu poți plasa stupul acolo.",
     "placement_cancelled": "Plasare anulată.",
     "hive_colony_died": "Colonia a murit de foame, iar regina a murit. Stupul este gol -- adaugă o nouă matcă pentru a porni din nou o colonie.",
     "hive_not_found": "Acest stup nu mai există.",
@@ -87,12 +86,5 @@
     "nui_not_owner_note": "Doar proprietarul poate recolta sau ridica acest stup.",
     "place_too_close": "Prea aproape de alt stup",
     "place_hud_title": "Plasează stupul",
-    "place_hud_place": "Plasează",
-    "place_hud_rotate": "Rotește",
-    "place_hud_height": "Înălțime",
-    "place_hud_cancel": "Anulează",
-    "place_hud_valid": "Gata de plasare",
-    "place_hud_heading_label": "Orientare",
-    "place_hud_height_label": "Înălțime",
     "hive_pickup_honey_ready": "Acest stup are miere gata -- recoltează-o înainte de a ridica stupul."
 }

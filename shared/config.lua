@@ -1,5 +1,9 @@
 Config = {}
 
+-- Creates the rsg_beehives table automatically on start. Set false to import
+-- install.sql manually instead.
+Config.AutoDatabase = true
+
 -- Discord webhook logging. Each event has its own on/off switch and optional
 -- URL override; anything left blank falls back to Config.Webhooks.url. Leave
 -- Config.Webhooks.enabled = false (or every URL blank) to disable logging
@@ -74,17 +78,10 @@ Config.BeeHiveProps = {
     { prop = 'bee_house_gk_6', item = 'beehive_gk_6', label = 'Bee House (Style 6)', price = 250 },
 }
 
--- Simple placement: the hive ghost sits on the ground in front of the player
--- and follows them. Walk/turn to position it. Controls:
--- [LMB] place, [Left / Right] rotate, [Up / Down] height, [RMB / Backspace] cancel.
+-- Placement uses rsg-gizmo (the framework's standard placement tool).
 Config.Placement = {
-    placeDistance  = 1.5,   -- metres in front of the player the hive is placed
-    maxDistance    = 6.0,   -- server-side sanity check on placement distance
+    maxDistance    = 6.0,   -- max player <-> hive distance (client gizmo + server check)
     minHiveSpacing = 2.0,   -- min distance between two hives
-    heightMax      = 0.5,   -- max height offset up/down from the ground
-    heightSpeed    = 0.3,   -- metres per second while holding Up/Down
-    rotateSpeed    = 90.0,  -- degrees per second while holding Left/Right
-    ringRadius     = 0.6,   -- radius of the valid/invalid ring drawn under the ghost
 }
 
 Config.Beehive = {

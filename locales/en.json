@@ -3,7 +3,6 @@
     "title_beehive": "Beehive",
     "title_beehive_webhooks": "Beehive Webhooks",
     "placement_already_placing": "You are already placing a beehive.",
-    "placement_cannot_place": "You cannot place the beehive there.",
     "placement_cancelled": "Placement cancelled.",
     "hive_colony_died": "The colony has starved and the queen has died. The hive is empty -- add a new queen bee to start a colony again.",
     "hive_not_found": "That beehive no longer exists.",
@@ -87,12 +86,5 @@
     "nui_not_owner_note": "Only the owner can harvest or pick up this hive.",
     "place_too_close": "Too close to another beehive",
     "place_hud_title": "Place Beehive",
-    "place_hud_place": "Place",
-    "place_hud_rotate": "Rotate",
-    "place_hud_height": "Height",
-    "place_hud_cancel": "Cancel",
-    "place_hud_valid": "Ready to place",
-    "place_hud_heading_label": "Heading",
-    "place_hud_height_label": "Raise",
     "hive_pickup_honey_ready": "This hive has honey ready -- harvest it before picking the hive up."
 }

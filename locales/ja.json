@@ -3,7 +3,6 @@
     "title_beehive": "巣箱",
     "title_beehive_webhooks": "巣箱Webhook",
     "placement_already_placing": "すでに巣箱を設置中です。",
-    "placement_cannot_place": "そこには巣箱を設置できません。",
     "placement_cancelled": "設置をキャンセルしました。",
     "hive_colony_died": "群れが飢え、女王蜂が死んでしまいました。巣箱は空です -- 新しい女王蜂を入れて、もう一度群れを始めましょう。",
     "hive_not_found": "その巣箱はもう存在しません。",
@@ -87,12 +86,5 @@
     "nui_not_owner_note": "この巣箱の採取と回収は所有者のみ可能です。",
     "place_too_close": "他の巣箱に近すぎます",
     "place_hud_title": "巣箱を設置",
-    "place_hud_place": "設置",
-    "place_hud_rotate": "回転",
-    "place_hud_height": "高さ",
-    "place_hud_cancel": "キャンセル",
-    "place_hud_valid": "設置できます",
-    "place_hud_heading_label": "向き",
-    "place_hud_height_label": "高さ",
     "hive_pickup_honey_ready": "この巣箱には収穫できる蜂蜜があります。巣箱を回収する前に収穫してください。"
 }

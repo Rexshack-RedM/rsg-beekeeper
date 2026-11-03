@@ -276,51 +276,8 @@
             case 'locale':
                 applyLocale(data.strings);
                 break;
-            case 'placementShow':
-                showPlacementHud(data.strings);
-                break;
-            case 'placementUpdate':
-                updatePlacementHud(data);
-                break;
-            case 'placementHide':
-                placeHud.classList.add('hidden');
-                break;
         }
     });
-
-    // --- Placement HUD (display only, never takes focus) -------------------
-
-    const placeHud = $('placeHud');
-    const placeHudStatus = $('placeHudStatus');
-    const PLACE_HUD_TEXT = {
-        placeHudTitle: 'title',
-        placeHudPlace: 'place',
-        placeHudRotate: 'rotate',
-        placeHudHeight: 'height',
-        placeHudCancel: 'cancel',
-        placeHudHeadingLabel: 'headingLabel',
-        placeHudHeightLabel: 'heightLabel',
-    };
-    let placeStrings = {};
-
-    function showPlacementHud(incoming) {
-        placeStrings = incoming || {};
-        for (const [elId, key] of Object.entries(PLACE_HUD_TEXT)) {
-            if (placeStrings[key]) $(elId).textContent = placeStrings[key];
-        }
-        updatePlacementHud({ valid: false, reason: '', heading: 0, height: 0 });
-        placeHud.classList.remove('hidden');
-    }
-
-    function updatePlacementHud(data) {
-        const valid = !!data.valid;
-        placeHudStatus.classList.toggle('valid', valid);
-        placeHudStatus.classList.toggle('invalid', !valid);
-        $('placeHudReason').textContent = valid ? (placeStrings.valid || '') : (data.reason || '');
-        $('placeHudHeading').textContent = `${Math.round(Number(data.heading) || 0)}°`;
-        const h = Number(data.height) || 0;
-        $('placeHudHeightVal').textContent = `${h > 0 ? '+' : ''}${h.toFixed(2)} m`;
-    }
 
     // --- Actions ------------------------------------------------------------
 
@@ -365,6 +322,6 @@
         if (event.key === 'Escape' && !app.classList.contains('hidden')) requestClose();
     });
 
-    // The panel can't call ox_lib's locale() itself -- ask Lua for strings.
+    // The panel can't call locale() itself -- ask Lua for the strings.
     nuiFetch('nuiReady');
 })();

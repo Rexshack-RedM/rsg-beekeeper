@@ -1,3 +1,6 @@
+local RSGCore = exports['rsg-core']:GetCoreObject()
+local Gizmo = exports['rsg-gizmo']
+
 local Beehive = Config.Beehive
 local PTFX_DICT = 'core'
 
@@ -7,6 +10,20 @@ local openHiveId = nil
 
 local function Notify(description, notifyType)
     RSGCore.Functions.Notify({ title = locale('title_beehive'), description = description, type = notifyType or 'inform', duration = 5000 })
+end
+
+-- Returns the model hash once loaded, or nil if invalid / timed out.
+local function LoadModel(model)
+    local hash = type(model) == 'number' and model or joaat(model)
+    if not IsModelValid(hash) then return nil end
+    if HasModelLoaded(hash) then return hash end
+    RequestModel(hash, false)
+    local timeout = GetGameTimer() + 5000
+    while not HasModelLoaded(hash) do
+        if GetGameTimer() > timeout then return nil end
+        Wait(10)
+    end
+    return hash
 end
 
 --------------------------------------------------------------------------------------------------
@@ -63,7 +80,7 @@ local function SpawnHiveEntity(hive)
     if hive.entity or hive.loading then return end
     hive.loading = true
 
-    local hash = BeekeeperLoadModel(hive.prop) or BeekeeperLoadModel(Beehive.prop)
+    local hash = LoadModel(hive.prop) or LoadModel(Beehive.prop)
     hive.loading = false
 
     -- The player may have walked off, or the hive been removed, while the
@@ -151,29 +168,38 @@ CreateThread(function()
 end)
 
 --------------------------------------------------------------------------------------------------
--- Placement (shared gizmo in client/placement.lua, same as rsg-farming)
+-- Placement (rsg-gizmo)
 --------------------------------------------------------------------------------------------------
 
 RegisterNetEvent('rsg-beekeeper:client:startPlacement', function(prop)
-    if Placement.Active then
+    if Gizmo:IsActive() then
         return Notify(locale('placement_already_placing'), 'error')
     end
+    if openHiveId then CloseHiveUI() end
 
     local spacing = Config.Placement.minHiveSpacing
-    local coords, heading = Placement.Start(prop, function(pos)
-        for _, hive in pairs(hives) do
-            if #(hive.coords - pos) < spacing then
-                return false, locale('place_too_close')
+    local result = Gizmo:Place(prop, {
+        title        = locale('place_hud_title'),
+        maxDistance  = Config.Placement.maxDistance,
+        rotation     = 'z',
+        snapToGround = true,
+        allowInterior = false,
+        allowWater   = false,
+        validate = function(coords)
+            for _, hive in pairs(hives) do
+                if #(hive.coords - coords) < spacing then
+                    return false, locale('place_too_close')
+                end
             end
-        end
-        return true
-    end, locale('placement_cannot_place'))
+            return true
+        end,
+    })
 
-    if not coords then
+    if not result then
         return Notify(locale('placement_cancelled'), 'inform')
     end
 
-    TriggerServerEvent('rsg-beekeeper:server:placeBeehive', coords, heading, prop)
+    TriggerServerEvent('rsg-beekeeper:server:placeBeehive', result.coords, result.heading, prop)
 end)
 
 --------------------------------------------------------------------------------------------------
@@ -192,7 +218,7 @@ exports['rsg-target']:addModel(beeHiveModels, {
         label = locale('target_manage_beehive'),
         distance = Beehive.target.distance,
         canInteract = function(entity)
-            return entityToId[entity] ~= nil and not Placement.Active
+            return entityToId[entity] ~= nil and not Gizmo:IsActive()
         end,
         onSelect = function(data)
             local id = entityToId[data.entity]
@@ -270,7 +296,7 @@ local function SyncHiveState(data)
 end
 
 RegisterNetEvent('rsg-beekeeper:client:openHiveUI', function(data)
-    if Placement.Active then return end
+    if Gizmo:IsActive() then return end
 
     SyncHiveState(data)
     openHiveId = data.id
@@ -366,7 +392,9 @@ end)
 
 RegisterNetEvent('rsg-beekeeper:client:beehiveActivated', function(id)
     local hive = hives[id]
-    if hive then hive.active, hive.isFull, hive.isCalm = true, false, false end
+    if not hive then return end
+    hive.active, hive.isFull, hive.isCalm = true, false, false
+    StopBeeSwarm(hive)
 end)
 
 RegisterNetEvent('rsg-beekeeper:client:beehiveFull', function(id)
@@ -482,7 +510,7 @@ end)
 AddEventHandler('onResourceStop', function(resourceName)
     if resourceName ~= GetCurrentResourceName() then return end
 
-    Placement.Cancel()
+    if Gizmo:IsActive() then Gizmo:Cancel() end
     CloseHiveUI()
     SetNuiFocus(false, false)
     exports['rsg-target']:removeModel(beeHiveModels, 'rsg_beekeeper_manage_beehive')

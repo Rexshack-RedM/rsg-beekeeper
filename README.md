@@ -1,10 +1,12 @@
 # rsg-beekeeper
 
+**Version 3.2.0** · Full developer reference: [DOCS.md](DOCS.md)
+
 A beekeeping script for RedM, built on the RSG Framework. Players place beehives, start a colony with a queen bee, keep it fed and watered, calm it with a smoker, and harvest honey and beeswax once the colony is fully grown.
 
 ## Features
 
-- **Placeable beehives** -- 6 prop styles (`bee_house_gk_1` to `bee_house_gk_6`), each with its own inventory item. Placement shows a ghost hive on the ground in front of you that follows as you walk, with a green/red ring and a small HUD showing whether the spot is valid.
+- **Placeable beehives** -- 6 prop styles (`bee_house_gk_1` to `bee_house_gk_6`), each with its own inventory item. Placement uses **rsg-gizmo**, the framework's standard placement tool, and is blocked in water, inside interiors and too close to another hive.
 - **Queen bee activation** -- a placed hive stays empty until a queen bee is added through the management panel.
 - **Population growth** -- bees arrive gradually over real time up to a configurable max. Growth is worked out from a timestamp, so it carries on across restarts with no ticking loop.
 - **Food / water / health upkeep** -- a fully grown colony uses food and water on a fixed tick. If either runs out, health drains; once both are topped up, health recovers. The whole tick runs as a single database update, so it stays cheap with hundreds of hives. At 0 health the colony and queen die, but the hive stays placed and can be requeened.
@@ -15,7 +17,7 @@ A beekeeping script for RedM, built on the RSG Framework. Players place beehives
 - **Per-player hive cap** -- optional limit on how many hives one character can have placed.
 - **Discord webhook logging** -- optional per-event webhooks for placing, activating, harvesting, picking up and colony deaths, plus an admin test command.
 - **Server-side validation** -- every action re-checks distance, ownership and item possession on the server, holds a per-player action lock, and uses conditional database updates so rewards and refunds can't be duplicated by spamming events. Inventory space is checked before harvesting or picking up, so items are never lost to a full inventory.
-- **Automatic database setup** -- the `rsg_beehives` table is created on resource start.
+- **Automatic database setup** -- the `rsg_beehives` table is created on resource start (`Config.AutoDatabase`), with `install.sql` for manual installs.
 - **Version checker** -- warns in the server console when a newer version is available.
 
 ## Dependencies
@@ -23,6 +25,7 @@ A beekeeping script for RedM, built on the RSG Framework. Players place beehives
 - [`rsg-core`](https://github.com/Rexshack-RedM/rsg-core)
 - [`rsg-inventory`](https://github.com/Rexshack-RedM/rsg-inventory)
 - [`rsg-target`](https://github.com/Rexshack-RedM/rsg-target)
+- [`rsg-gizmo`](https://github.com/Rexshack-RedM/rsg-gizmo)
 - [`oxmysql`](https://github.com/overextended/oxmysql)
 
 ## Installation
@@ -36,10 +39,11 @@ A beekeeping script for RedM, built on the RSG Framework. Players place beehives
    ensure rsg-core
    ensure rsg-inventory
    ensure rsg-target
+   ensure rsg-gizmo
    ensure rsg-beekeeper
    ```
 
-3. **Database** -- nothing to do. The `rsg_beehives` table is created automatically on first start (the database user needs `CREATE` permission). `installation/rsg_beehives.sql` is included if you'd rather import it yourself.
+3. **Database** -- nothing to do. The `rsg_beehives` table is created automatically on first start (the database user needs `CREATE` permission). To install manually, set `Config.AutoDatabase = false` and import `install.sql`.
 
 4. **Items** -- copy the entries from `installation/items.lua` into `rsg-core/shared/items.lua`, and the images from `installation/images/` into your inventory's image folder:
    - `beehive_gk_1` .. `beehive_gk_6` -- placeable hives
@@ -87,6 +91,7 @@ add_ace group.admin command.beehivewebhook allow
 
 | Setting | Default | Description |
 |---|---|---|
+| `Config.AutoDatabase` | `true` | Create the table on start; set `false` to import `install.sql` yourself |
 | `Config.ProximityBuffer` | `3.0` | Extra metres allowed on server distance checks for network drift |
 | `queenBeeItem` | `queen_bee` | Item used to start a colony |
 | `prop` | `bee_house_gk_1` | Fallback prop if a hive's stored prop can't load |
@@ -97,17 +102,12 @@ add_ace group.admin command.beehivewebhook allow
 
 ### Placement (`Config.Placement`)
 
-Controls: **LMB** place, **Left / Right** rotate, **Up / Down** height, **RMB / Backspace** cancel. While placing, a panel in the top left shows the keys, the current heading and height, and live feedback on whether the spot is valid (and why not). Placement is blocked in water and inside interiors.
+Using a beehive item opens the rsg-gizmo placer (heading-only rotation, snapped to the ground). Its on-screen HUD shows the controls. Placement is blocked in water, inside interiors and within `minHiveSpacing` of another hive.
 
 | Setting | Default | Description |
 |---|---|---|
-| `placeDistance` | `1.5` | Metres in front of the player the ghost hive sits |
-| `maxDistance` | `6.0` | Server-side sanity check on how far from the player a hive can be placed |
+| `maxDistance` | `6.0` | Max distance between player and hive (gizmo limit and server check) |
 | `minHiveSpacing` | `2.0` | Minimum distance between two hives (checked on client and server) |
-| `heightMax` | `0.5` | Max height adjustment up or down |
-| `heightSpeed` | `0.3` | Metres per second while holding Up/Down |
-| `rotateSpeed` | `90.0` | Degrees per second while holding Left/Right |
-| `ringRadius` | `0.6` | Size of the valid/invalid ring |
 
 ### Beehive props (`Config.BeeHiveProps`)
 
@@ -159,7 +159,7 @@ Food and water can only be added once a colony is fully grown, since a growing c
 
 ## Locales
 
-All player-facing text -- notifications, the placement help bar, the `rsg-target` label, the management panel and the Discord webhook embeds -- lives in `locales/*.json` and is loaded by rsg-core (`@rsg-core/shared/locale.lua`). The panel gets its text from Lua when it opens, so it follows the same language.
+All player-facing text -- notifications, the placement title, the `rsg-target` label, the management panel and the Discord webhook embeds -- lives in `locales/*.json` and is loaded by rsg-core (`@rsg-core/shared/locale.lua`). The panel gets its text from Lua when it opens, so it follows the same language.
 
 Included languages: `en`, `de`, `el`, `es`, `fr`, `ja`, `nl`, `pl`, `pt-br`, `ro`.
 

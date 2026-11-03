@@ -3,7 +3,6 @@
     "title_beehive": "Colmeia",
     "title_beehive_webhooks": "Webhooks de colmeias",
     "placement_already_placing": "Você já está posicionando uma colmeia.",
-    "placement_cannot_place": "Você não pode posicionar a colmeia aí.",
     "placement_cancelled": "Posicionamento cancelado.",
     "hive_colony_died": "A colônia morreu de fome e a rainha morreu. A colmeia está vazia -- adicione uma nova abelha rainha para começar outra colônia.",
     "hive_not_found": "Essa colmeia não existe mais.",
@@ -87,12 +86,5 @@
     "nui_not_owner_note": "Só o dono pode colher ou recolher esta colmeia.",
     "place_too_close": "Perto demais de outra colmeia",
     "place_hud_title": "Posicionar colmeia",
-    "place_hud_place": "Posicionar",
-    "place_hud_rotate": "Girar",
-    "place_hud_height": "Altura",
-    "place_hud_cancel": "Cancelar",
-    "place_hud_valid": "Pronto para posicionar",
-    "place_hud_heading_label": "Direção",
-    "place_hud_height_label": "Altura",
     "hive_pickup_honey_ready": "Esta colmeia tem mel pronto -- colha antes de recolher a colmeia."
 }

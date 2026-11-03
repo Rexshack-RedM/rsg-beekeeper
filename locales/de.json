@@ -3,7 +3,6 @@
     "title_beehive": "Bienenstock",
     "title_beehive_webhooks": "Bienenstock-Webhooks",
     "placement_already_placing": "Du platzierst bereits einen Bienenstock.",
-    "placement_cannot_place": "Du kannst den Bienenstock hier nicht platzieren.",
     "placement_cancelled": "Platzierung abgebrochen.",
     "hive_colony_died": "Das Volk ist verhungert und die Königin ist gestorben. Der Stock ist leer -- setze eine neue Bienenkönigin ein, um ein neues Volk zu gründen.",
     "hive_not_found": "Dieser Bienenstock existiert nicht mehr.",
@@ -87,12 +86,5 @@
     "nui_not_owner_note": "Nur der Besitzer kann diesen Stock ernten oder aufheben.",
     "place_too_close": "Zu nah an einem anderen Bienenstock",
     "place_hud_title": "Bienenstock platzieren",
-    "place_hud_place": "Platzieren",
-    "place_hud_rotate": "Drehen",
-    "place_hud_height": "Höhe",
-    "place_hud_cancel": "Abbrechen",
-    "place_hud_valid": "Bereit zum Platzieren",
-    "place_hud_heading_label": "Ausrichtung",
-    "place_hud_height_label": "Höhe",
     "hive_pickup_honey_ready": "Dieser Bienenstock hat fertigen Honig -- ernte ihn, bevor du den Stock aufhebst."
 }
