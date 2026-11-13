@@ -74,4 +74,4 @@ Table `rsg_beehives`: `id`, `citizenid`, `x`, `y`, `z`, `heading`, `active`, `ac
 | Can't add food/water | The colony isn't full grown yet (by design) |
 | Panel closes by itself | You walked more than `target.distance + 2` m from the hive |
 
-Support: https://buymeacoffee.com/rexshack
+Support the Project : https://rexshack.tebex.store/
