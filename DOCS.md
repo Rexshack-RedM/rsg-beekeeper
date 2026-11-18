@@ -75,3 +75,85 @@ Table `rsg_beehives`: `id`, `citizenid`, `x`, `y`, `z`, `heading`, `active`, `ac
 | Panel closes by itself | You walked more than `target.distance + 2` m from the hive |
 
 Support the Project : https://rexshack.tebex.store/
+
+<!-- BEGIN AUTO-REFERENCE (generated from the code; re-run the generator instead of editing by hand) -->
+
+## Technical reference
+
+Generated from the source of **rsg-beekeeper 3.2.0**. Names, arguments and defaults below are read straight from the code.
+
+### Dependencies
+
+`rsg-core`, `rsg-inventory`, `rsg-target`, `rsg-gizmo`, `oxmysql`
+
+### Database
+
+Tables: `rsg_beehives`.
+
+Tables are created automatically on start while `Config.AutoDatabase = true` (default). Nothing is ever dropped or overwritten.
+For a manual install set `Config.AutoDatabase = false` and import `install.sql` once.
+
+```lua
+-- shared/config.lua
+Config.AutoDatabase = true -- false = import the SQL file yourself
+```
+
+### Configuration
+
+| Option | Default | Notes |
+|---|---|---|
+| `Config.AutoDatabase` | `true` | install.sql manually instead. |
+| `Config.Webhooks` | `table` | entirely -- the webhook module no-ops instead of erroring. |
+| `Config.ProximityBuffer` | `3.0` | hard equality check would false-reject legitimate players. |
+| `Config.BeeHiveProps` | `table` | through the database as text, so it needs to stay a string the whole way. |
+| `Config.Placement` | `table` | Placement uses rsg-gizmo (the framework's standard placement tool). |
+| `Config.Beehive` | `table` |  |
+
+### Events
+
+Server events can be fired by any client, so every handler re-validates the player, the arguments and any permission, distance or cooldown on the server. Never add a reward to a handler without those checks.
+
+| Event | Side | Arguments | File |
+|---|---|---|---|
+| `rsg-beekeeper:client:startPlacement` | client | `prop` | `client/client.lua` |
+| `rsg-beekeeper:client:openHiveUI` | client | `data` | `client/client.lua` |
+| `rsg-beekeeper:client:updateHiveUI` | client | `data` | `client/client.lua` |
+| `rsg-beekeeper:client:actionResult` | client | `data` | `client/client.lua` |
+| `rsg-beekeeper:client:hiveGone` | client | `id, message` | `client/client.lua` |
+| `rsg-beekeeper:client:spawnBeehive` | client | `data` | `client/client.lua` |
+| `rsg-beekeeper:client:loadBeehives` | client | `list` | `client/client.lua` |
+| `rsg-beekeeper:client:removeBeehive` | client | `id` | `client/client.lua` |
+| `rsg-beekeeper:client:beehiveActivated` | client | `id` | `client/client.lua` |
+| `rsg-beekeeper:client:beehiveFull` | client | `id` | `client/client.lua` |
+| `rsg-beekeeper:client:hiveSmoked` | client | `id` | `client/client.lua` |
+| `rsg-beekeeper:client:hiveCalmExpired` | client | `id` | `client/client.lua` |
+| `rsg-beekeeper:client:playSmokerAnim` | client | `hiveCoords` | `client/client.lua` |
+| `rsg-beekeeper:client:colonyDied` | client | `id` | `client/client.lua` |
+| `RSGCore:Client:OnPlayerLoaded` | client | `` | `client/client.lua` |
+| `RSGCore:Client:OnPlayerUnload` | client | `` | `client/client.lua` |
+| `rsg-beekeeper:server:placeBeehive` | server | `coords, heading, prop` | `server/server.lua` |
+| `rsg-beekeeper:server:requestBeehives` | server | `` | `server/server.lua` |
+| `rsg-beekeeper:server:getHiveInfo` | server | `id, isRefresh` | `server/server.lua` |
+| `rsg-beekeeper:server:addQueenBee` | server | `id` | `server/server.lua` |
+| `rsg-beekeeper:server:addHiveResource` | server | `id, resourceType` | `server/server.lua` |
+| `rsg-beekeeper:server:harvestHoney` | server | `id` | `server/server.lua` |
+| `rsg-beekeeper:server:pickupBeehive` | server | `id` | `server/server.lua` |
+
+```lua
+-- from a client script
+TriggerServerEvent('rsg-beekeeper:server:placeBeehive', coords, heading, prop)
+-- from a server script
+TriggerClientEvent('rsg-beekeeper:client:startPlacement', source, prop)
+```
+
+### Commands
+
+| Command | Notes | File |
+|---|---|---|
+| `/beehivewebhook` |  | `server/webhook.lua` |
+
+### Locales
+
+Language files in `locales/`: `de`, `el`, `en`, `es`, `fr`, `ja`, `nl`, `pl`, `pt-br`, `ro`. Set the language with `setr rsg:locale "en"`.
+
+<!-- END AUTO-REFERENCE -->
