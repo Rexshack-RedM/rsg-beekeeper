@@ -23,7 +23,7 @@ Version 3.2.0. For install and config, see [README.md](README.md).
 | `html/` | Hive management panel (Roboto, leather & gold theme, no vignette) |
 | `install.sql` | Manual schema (same as the auto-build in `server.lua`) |
 | `installation/` | `items.lua` entries and item images |
-| `locales/*.json` | 10 languages, identical keys |
+| `locales/*.json` | 11 languages, identical keys |
 
 The script has no exports.
 
@@ -154,6 +154,6 @@ TriggerClientEvent('rsg-beekeeper:client:startPlacement', source, prop)
 
 ### Locales
 
-Language files in `locales/`: `de`, `el`, `en`, `es`, `fr`, `ja`, `nl`, `pl`, `pt-br`, `ro`. Set the language with `setr rsg:locale "en"`.
+Language files in `locales/`: `de`, `el`, `en`, `es`, `fr`, `ja`, `nl`, `pl`, `pt-br`, `ro`, `ru`. Set the language with `setr rsg:locale "en"`.
 
 <!-- END AUTO-REFERENCE -->

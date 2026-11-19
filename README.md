@@ -161,7 +161,7 @@ Food and water can only be added once a colony is fully grown, since a growing c
 
 All player-facing text -- notifications, the placement title, the `rsg-target` label, the management panel and the Discord webhook embeds -- lives in `locales/*.json` and is loaded by rsg-core (`@rsg-core/shared/locale.lua`). The panel gets its text from Lua when it opens, so it follows the same language.
 
-Included languages: `en`, `de`, `el`, `es`, `fr`, `ja`, `nl`, `pl`, `pt-br`, `ro`.
+Included languages: `en`, `de`, `el`, `es`, `fr`, `ja`, `nl`, `pl`, `pt-br`, `ro`, `ru`.
 
 Set the server language in `server.cfg` (falls back to `ox:locale`, then `en`):
 
